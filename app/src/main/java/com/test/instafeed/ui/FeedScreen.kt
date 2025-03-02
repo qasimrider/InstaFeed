@@ -1,7 +1,7 @@
 package com.test.instafeed.ui
 
-import android.net.Uri
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,16 +37,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 import coil3.compose.AsyncImage
 import com.test.instafeed.R
 import com.test.instafeed.ui.model.FeedItem
+import com.test.instafeed.utils.FeedsExoPlayer
 import com.test.instafeed.utils.config
 import com.test.instafeed.utils.imageRequest
 
 const val VISIBLE_ITEM_BUFFER = 500
+const val CONTENT_HEIGHT_TO_SCREEN_RATIO = 1.5
 
 @Composable
 fun FeedScreen(modifier: Modifier = Modifier, feedViewModel: FeedViewModel = viewModel()) {
@@ -98,7 +99,7 @@ fun FeedScreen(modifier: Modifier = Modifier, feedViewModel: FeedViewModel = vie
 private fun FeedItemView(feedItem: FeedItem, visibleOffset: () -> Boolean) {
 
     val context = LocalContext.current
-    val imageHeight = config().screenHeightDp / 1.5
+    val imageHeight = config().screenHeightDp / CONTENT_HEIGHT_TO_SCREEN_RATIO
 
     Column(
         modifier = Modifier
@@ -172,19 +173,18 @@ private fun FeedActions() {
 }
 
 
+@UnstableApi
 @Composable
 fun VideoPlayer(videoRes: Int, visibleOffset: () -> Boolean) {
 
     val context = LocalContext.current
-    val videoPlayerHeight = config().screenHeightDp / 1.5
+    val videoPlayerHeight = config().screenHeightDp / CONTENT_HEIGHT_TO_SCREEN_RATIO
 
-    val exoPlayer = remember { ExoPlayer.Builder(context).build() }
+    val feedsExoPlayer = remember { FeedsExoPlayer(context).build(videoRes) }
     val isVisible = remember { derivedStateOf { visibleOffset() } }
 
     DisposableEffect(videoRes) {
-        exoPlayer.setMediaItem(MediaItem.fromUri(Uri.parse("android.resource://${context.packageName}/$videoRes")))
-        exoPlayer.prepare()
-        onDispose { exoPlayer.release() }//Dispose off the video
+        onDispose { feedsExoPlayer.releasePlayer() }//Dispose off the video
     }
     Box(
         modifier = Modifier
@@ -194,8 +194,8 @@ fun VideoPlayer(videoRes: Int, visibleOffset: () -> Boolean) {
     ) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
-            factory = { PlayerView(it).apply { player = exoPlayer } },
-            update = { if (isVisible.value) exoPlayer.play() else exoPlayer.pause() }
+            factory = { PlayerView(it).apply { player = feedsExoPlayer.get() } },
+            update = { if (isVisible.value) feedsExoPlayer.play() else feedsExoPlayer.pause() }
         )
     }
 }

@@ -1,7 +1,6 @@
 package com.test.instafeed
 
 import android.app.Application
-import android.util.Log
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
@@ -13,7 +12,6 @@ import okio.Path.Companion.toOkioPath
 
 class InstaFeedApplication : Application(), SingletonImageLoader.Factory {
     override fun newImageLoader(context: PlatformContext): ImageLoader {
-        Log.i("TAG", "newImageLoader: ")
         return ImageLoader.Builder(context)
             .memoryCache {
                 MemoryCache.Builder() //LRU cache config
