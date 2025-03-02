@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">InstaFeed</string>
+    <string name="like">Like</string>
+    <string name="comment">Comment</string>
+    <string name="send">Send</string>
+    <string name="bookmark">Bookmark</string>
 </resources>
